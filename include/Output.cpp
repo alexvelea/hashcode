@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <string>
 
+#include "Debug.hpp"
 
 extern int test_number;
 
@@ -20,15 +21,23 @@ std::string AnsFile();
 std::string BestCostFile();
 std::string LockFile();
 
+int num_dump_calls = 0;
+
 std::ofstream GetAnsStream() {
     std::ofstream fout(AnsFile().c_str());
     return fout;
 }
 
 bool to_be_killed = false;
+bool dumping = false;
+
 static void EnsureNiceRelease(int) {
+    if (not dumping) {
+        exit(0);
+    }
     to_be_killed = true;
 }
+
 
 bool CheckUpgrade(BaseOutput& output) {
     double mx_cost;
@@ -36,9 +45,14 @@ bool CheckUpgrade(BaseOutput& output) {
     fin >> mx_cost;
     fin.close();
 
-    if (mx_cost < output.Cost()) {
+    double my_cost = output.Cost();
+
+    if (mx_cost < my_cost) {
         std::ofstream fout(BestCostFile().c_str());
-        fout << std::fixed << std::setprecision(11) << output.Cost() << '\n';
+        std::cerr << "Found a better solution\n";
+        std::cerr << std::fixed << std::setprecision(5) << "old cost:\t" << mx_cost << '\n';
+        std::cerr << std::fixed << std::setprecision(5) << "new cost:\t" << my_cost << '\n';
+        fout << std::fixed << std::setprecision(11) << my_cost << '\n';
         fout.close();
 
         return true;
@@ -68,6 +82,11 @@ void MockSignals() {
 void Dump(BaseOutput& output) {
     MockSignals();
 
+    num_dump_calls += 1;
+    if ((num_dump_calls & (-num_dump_calls)) == num_dump_calls) {
+        std::cerr << "Called dump #" << num_dump_calls << " times\n";
+    }
+
     struct flock fl = {F_WRLCK, SEEK_SET, 0, 0, getpid()};
     int fd;
 
@@ -80,6 +99,8 @@ void Dump(BaseOutput& output) {
         perror("fcntl");
         exit(1);
     }
+
+    dumping = true;
 
     // command here
     if (CheckUpgrade(output)) {
@@ -94,6 +115,8 @@ void Dump(BaseOutput& output) {
         perror("fcntl");
         exit(1);
     }
+
+    dumping = false;
 
     if (to_be_killed) {
         exit(0);

@@ -8,6 +8,7 @@
 #include "Logger.hpp"
 #include "Macros.hpp"
 #include "Output.hpp"
+#include "Time.hpp"
 
 #include "utils.hpp"
 #include "random.hpp"

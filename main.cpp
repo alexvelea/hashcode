@@ -26,8 +26,8 @@ struct Output : BaseOutput {
     int x, y;
 
     Output() {
-        x = rand() % 10000000;
-        y = rand() % 10000000;
+        x = rand() % input.n;
+        y = rand() % input.m;
     }
 
     double Cost() {
@@ -42,6 +42,7 @@ struct Output : BaseOutput {
 int main(int argc, char** argv) {
     srand(time(0) + getpid());
     InitHashCode(argc, argv);
+
     input = Input(GetInputStream());
 
     vector<int> x = {10, 40, 30, 20};
@@ -52,7 +53,7 @@ int main(int argc, char** argv) {
     auto p = Range(10);
     Debug(x, y, p);
 
-    for (int i = 0; i < 10; i +=1 ) {
+    for (Timer t; t.secElapsed() <= 3; ) {
         Output o;
         Dump(o);
     }
