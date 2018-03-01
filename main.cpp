@@ -9,7 +9,7 @@
 
 #include "include/HashCode.hpp"
 #include "objects.hpp"
-#include "E_BIG_BONUS.hpp"
+#include "no_hurry.hpp"
 
 using namespace std;
 
@@ -41,6 +41,9 @@ struct Output : BaseOutput {
     vector<Vehicle> vehicles;
 
     Output() : vehicles(num_vehicles) {
+        for (int i = 0; i < vehicles.size(); ++ i) {
+            vehicles[i].id = i;
+        }
     }
 
     double Cost() {
@@ -68,5 +71,7 @@ int main(int argc, char** argv) {
     InitHashCode(argc, argv);
 
     input = Input(GetInputStream());
-    Debug(h, w, max_time, num_vehicles, bonus_points_on_time);
+    Debug(h, w, max_time, num_vehicles, bonus_points_on_time, input.all_rides.size());
+    Output output;
+    work(input.all_rides, output);
 }

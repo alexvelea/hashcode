@@ -45,11 +45,16 @@ struct Ride {
         start_time = max(start_time, t_start);
         return start_time + Distance();
     }
+
+    inline bool operator < (const Ride &other) const {
+        return id < other.id;
+    }
 };
 
 
 struct Vehicle {
     vector<Ride> rides;
+    int id;
 
     int64 SimulateRide() {
         int current_time = 0;
@@ -60,6 +65,7 @@ struct Vehicle {
             int arrival_time = current_time + current_position.Distance(r.start);
             points += r.Points(arrival_time);
             current_time = r.FinishTime(arrival_time);
+            current_position = r.destination;
         }
 
         return points;
