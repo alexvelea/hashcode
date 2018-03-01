@@ -70,17 +70,85 @@ void PopulateRides(vector<Ride> &all_rides, auto &output) {
             available_vehicle_ids.erase(find(available_vehicle_ids.begin(), available_vehicle_ids.end(), vehicle_id));
         }
     }
-    for (int i = 0; i < num_vehicles; ++ i) {
-        output.vehicles[i].rides = vehicle_id_assigned_rides[i];
+    int bestPoints = totalPoints;
+    bool tryUpgrade = false;
+    while (true) {
+        bool upgraded = false;
+        if (!tryUpgrade) {
+            tryUpgrade = true;
+            upgraded = true;
+        } else {
+            // Trying to upgrade a car
+            int vehicle_id = Rand(0, num_vehicles);
+
+            // save state
+            vector<Ride> old_rides = vehicle_id_assigned_rides[vehicle_id];
+            pair<Point, int> old_location = vehicle_location[vehicle_id];
+            int oldPoints = output.vehicles[vehicle_id].SimulateRide();
+            set<Ride> old_available = available_rides;
+
+            // re-init
+            for (auto ride : old_rides) {
+                available_rides.insert(ride);
+            }
+            vehicle_id_assigned_rides[vehicle_id].clear();
+            vehicle_location[vehicle_id] = {Point({0, 0}), 0};
+            int newPoints = 0;
+            bool can_continue = true;
+            while (can_continue) {
+                can_continue = false;
+                vector<Ride> ok_rides;
+                for (auto ride : available_rides) {
+                    pair<Point, int> current_location = vehicle_location[vehicle_id];
+                    int startTime = current_location.second + current_location.first.Distance(ride.start);
+                    int points = ride.Points(startTime);
+                    if (points > 0) {
+                        ok_rides.push_back(ride);
+                        can_continue = true;
+                    }
+                }
+                if (can_continue) {
+                    sort(ok_rides.begin(), ok_rides.end(), [&](const Ride &r1, const Ride &r2) {
+                        pair<Point, int> current_location = vehicle_location[vehicle_id];
+                        return current_location.first.Distance(r1.start) < current_location.first.Distance(r2.start);
+                    });
+                    Ride selected_ride;
+                    if (ok_rides.size() >= 2) {
+                        selected_ride = ok_rides[RandLog(1, (int)ok_rides.size()) - 1];
+                    } else {
+                        selected_ride = ok_rides[0];
+                    }
+                    available_rides.erase(selected_ride);
+                    vehicle_id_assigned_rides[vehicle_id].push_back(selected_ride);
+                    pair<Point, int> current_location = vehicle_location[vehicle_id];
+                    int startTime = current_location.second + current_location.first.Distance(selected_ride.start);
+                    newPoints += selected_ride.Points(startTime);
+                    vehicle_location[vehicle_id] = {selected_ride.destination, selected_ride.FinishTime(startTime)};
+                }
+            }
+
+            if (newPoints > oldPoints) {
+                bestPoints += newPoints - oldPoints;
+                cerr << "Success " << bestPoints << "\n";
+                upgraded = true;
+            } else {
+                vehicle_id_assigned_rides[vehicle_id] = old_rides;
+                vehicle_location[vehicle_id] = old_location;
+                available_rides = old_available;
+                cerr << "Fail\n";
+            }
+        }
+        if (upgraded) {
+            for (int i = 0; i < num_vehicles; ++i) {
+                output.vehicles[i].rides = vehicle_id_assigned_rides[i];
+            }
+            Dump(output);
+        }
     }
-    cerr << totalPoints << " " << output.Cost() << endl;
-    Dump(output);
 }
 
 void work(vector<Ride> &all_rides, auto &output) {
-    while(true) {
-        PopulateRides(all_rides, output);
-    }
+    PopulateRides(all_rides, output);
 }
 
 #endif
