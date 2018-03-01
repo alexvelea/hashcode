@@ -116,6 +116,7 @@ void Dump(BaseOutput& output) {
         exit(1);
     }
 
+    close(fd);
     dumping = false;
 
     if (to_be_killed) {
