@@ -9,6 +9,7 @@
 
 #include "include/HashCode.hpp"
 #include "objects.hpp"
+#include "E_BIG_BONUS.hpp"
 
 using namespace std;
 
@@ -28,6 +29,7 @@ struct Input {
             in >> r.start.x >> r.start.y;
             in >> r.destination.x >> r.destination.y;
             in >> r.t_start >> r.t_end;
+            all_rides.push_back(r);
         }
     }
 
